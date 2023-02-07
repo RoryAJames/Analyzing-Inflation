@@ -67,10 +67,10 @@ st.write("""This project is for educational purposes only and should not be used
 
 st.subheader('Part 1: Inflation And The P/E Multiple')
 
-st.write("""Inflation has arguably been the largest topic of economic concern in the past year. As of March 2022, the US Federal Reserve started to aggressively take
+st.write("""Inflation has arguably been the largest topic of economic concern in the past year. In March 2022 the US Federal Reserve started to aggressively take
          measures through raising interest rates and quantitative tightening in an effort to cool the rate of inflation in the US. The reason for looking at the relationship between
          inflation and the P/E multiple is that historical data has shown there to be a [negative correlation between these variables](https://www.investopedia.com/ask/answers/123.asp#toc-review-of-the-pe-ratio).
-         To see this relationship I created a scatter plot with a regression model using data points from the 1960's onward. Why did I start from the 60\'s? 
+         To see this relationship I created a scatter plot with a regression model using data points from the 1970's onward. Why did I start from the 70\'s? 
          """)
 
 expected_inflation = get_fred_data_latest('EXPINF1YR')
