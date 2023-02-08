@@ -1,8 +1,15 @@
-import os
 import streamlit as st
+import os
+from datetime import datetime, timedelta
+import numpy as np
 import pandas as pd
 from pandas_datareader import data as pdr
 import quandl as qd
+import statsmodels.api as sm
+import statsmodels.formula.api as smf
+from sklearn.preprocessing import PolynomialFeatures
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 #A function that returns the most recent value of a symbol in Quandl
 def get_quandl_data_latest(symobl):
@@ -16,7 +23,7 @@ def get_fred_data_latest(symbol):
     latest_value = latest_value.iloc[:, 0][len(latest_value) - 1]
     return latest_value
 
-key = os.environ.get('Quandl_API_Key')
+key = os.environ.get('Quandl_API_Key') #Retrieve Quandl key from environment variable
 qd.ApiConfig.api_key = key
 
 st.set_page_config(layout="wide")
@@ -25,8 +32,8 @@ st.title('Analyzing Inflation, Earnings, and the S&P 500')
 
 st.write("""The S&P 500 is a weighted stock market index that tracks the performance of the five-hundred leading publicly traded companies in the United States.
          Undoubtedly, it is the most followed index and is regarded as the best gauge of the overall stock market. The value of the S&P 500 can be broken down
-         into two components: 1) The earnings per share (EPS) of the companies that make up the index. 2) The price to earnings multiple (P/E) that investors are willing
-         to pay for EPS. Simply put, the value of the S&P 500 can be calculated with the following formula:""")
+         into two components: 1) The earnings per share (EPS) value of the companies that make up the index. 2) The price to earnings multiple (P/E) that investors are willing
+         to pay for the EPS value. Simply put, the value of the S&P 500 can be calculated with the following formula:""")
 
 st.latex(r'''\text{S\&P 500 Value} = \text{Earnings Per Share} * \text{Price to Earnings}''')
 
@@ -52,10 +59,10 @@ col4.metric("Latest S&P 500 Close", latest_close)
 
 st.write("""As you can see, the expected S&P 500 value trades around the latest close value. There will be some slight deviations between these figures
          since EPS and P/E are updated on a monthly basis, while the S&P 500 close value is updated daily. So, if you want to know where the value of S&P 500
-         will trade all you need to know is two things! 1) What are earnings per share going to be. 2) What is the price to earnings multiple going to be. 
+         will trade all you need to know is two things! 1) What are earnings going to be. 2) What is the P/E multiple going to be. 
          The problem is... no one knows what these are going to be. Banks, investment firms, hedge funds, and the like hire vast teams of analysts to come
-         up with models and predictions for these sort of figures. The reality is, none of them are able to predict these perfectly. However, I still think it is an
-         important and informative exercise to analyze historical data and use it as a basis to come up with reasonable expectations of where the S&P 500 will trade.""")
+         up with various models and predictions for these sort of figures. The reality is, none of them are able to predict these perfectly. However, I still think it is an
+         important and informative exercise to analyze historical data, and use the analysis as a basis to come up with reasonable expectations of where the S&P 500 could trade.""")
 
 st.write("This project consists of three parts: ")
 
@@ -68,10 +75,52 @@ st.write("""This project is for educational purposes only and should not be used
 st.subheader('Part 1: Inflation And The P/E Multiple')
 
 st.write("""Inflation has arguably been the largest topic of economic concern in the past year. In March 2022 the US Federal Reserve started to aggressively take
-         measures through raising interest rates and quantitative tightening in an effort to cool the rate of inflation in the US. The reason for looking at the relationship between
+         measures to cool the rate of inflation in the US by raising interest rates. The reason for looking at the relationship between
          inflation and the P/E multiple is that historical data has shown there to be a [negative correlation between these variables](https://www.investopedia.com/ask/answers/123.asp#toc-review-of-the-pe-ratio).
-         To see this relationship I created a scatter plot with a regression model using data points from the 1970's onward. Why did I start from the 70\'s? 
+         To see this relationship, I created a scatter plot with a regression model using data points from 1965 onward. Why did I choose 1965 as the starting year? This year was the beginning
+         of what is regarded as [the period of great inflation](https://www.federalreservehistory.org/essays/great-inflation), where the US entered into over decade and a half of high
+         inflation and economic hardship. There has been a lot of commentary that this current period could resemble that of the great inflation period, should the
+         US Federal Reserve not take adequate measures to bring down the current inflation rate. As such, I felt this was a logical place to start the data collection. After removing 
+         P/E outliers (values that exceeded the 95th percentile), it appears that the relationship between inflation and the P/E multiple isn't perfectly linear. A two degree
+         polynomial regression model ended up being the best approach for capturing this relationship: 
          """)
+
+### GET INFLATION AND P/E DATA FROM NASDAQ USING QUANDL
+
+today = datetime.today().date()
+
+today_day_num = today.strftime("%d") #Establishes today as a number
+
+start_date = "1965-01-01"
+
+end_date = today - timedelta(days=int(today_day_num) - 1) #Establish the end date as the first date of the current month
+
+#Since the dates do not match you have to read the
+
+inflation_data = qd.get("RATEINF/INFLATION_USA", start_date = start_date, end_date = end_date)
+
+pe_data = qd.get("MULTPL/SP500_PE_RATIO_MONTH", start_date = start_date, end_date = end_date)
+
+inflation_df = pd.merge_asof(left=inflation_data, right=pe_data, right_index=True,left_index=True,direction='nearest') #Merge to the closest date since the days do not line up perfectly
+inflation_df = inflation_df.rename(columns={'Value_x':'Inflation',
+                                            'Value_y':'S&P500_PE'}) #Rename the columns after performing the pandas merge as of
+
+upper_limit = inflation_df['S&P500_PE'].quantile(0.95) #Establishes the cutoff for removing outliers
+
+inflation_df = inflation_df[(inflation_df['S&P500_PE'] < upper_limit)] #Filters the data to values less than the cutoff
+
+#Plot the scatter plot using a two degree polynomial regression model
+
+fig = plt.figure(figsize=(14, 6))
+sns.regplot(x='Inflation', y='S&P500_PE', data=inflation_df, order = 2, line_kws={"color":"black"})
+sns.set(style="ticks")
+sns.despine()
+plt.xlabel("Inflation Rate", fontsize= 14, labelpad =12)
+plt.ylabel("P/E Multiple", fontsize= 14, labelpad =12)
+plt.title("Relationship Between Inflation and The P/E Multiple Of The S&P 500", fontsize=16, pad= 12)
+plt.grid();
+
+st.pyplot(fig)
 
 expected_inflation = get_fred_data_latest('EXPINF1YR')
 
@@ -88,7 +137,7 @@ st.sidebar.info(
         """
         This app was built by Rory James
         
-        Data for this project was sourced from the [Nasdaq Data Link](https://data.nasdaq.com/search) and [FRED](https://fred.stlouisfed.org/)
+        Data for this project was sourced from the [Nasdaq Data Link](https://data.nasdaq.com/) and [FRED](https://fred.stlouisfed.org/)
         
         [Click Here For The Project Source Code](https://github.com/RoryAJames/Analyzing-Inflation) 
         
