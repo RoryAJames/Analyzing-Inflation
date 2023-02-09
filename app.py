@@ -167,8 +167,9 @@ else:
 st.write(f"Based on FRED estimates, the current [1-Year expected inflation rate](https://fred.stlouisfed.org/series/EXPINF1YR) is {round(expected_inflation,2)}.")
 
 #DISPLAY THE RESULTS OF THE MODEL SUMMARY   
-
-st.write(model.summary())
+    
+with st.expander("Click Here To See The Regression Model Summary"):
+    st.write(model.summary())
 
 st.subheader('Part 2: Analyzing Historical Earnings')
 
