@@ -156,7 +156,7 @@ upper_estimate = round(intervals['mean_ci_upper'][0],2)
 if current_pe > point_estimate:
     
     st.write(f"""The current US inflation rate is {round(current_inflation,2)}%. Based on the above regression model, this would equate to a P/E point estimate of {point_estimate},
-             with a lower confidence interval of {lower_estimate}, and an upper confidence interval of {upper_estimate}.""")
+             with a lower prediction interval of {lower_estimate}, and an upper prediction interval of {upper_estimate}.""")
     
 #If the current P/E is lower than the write a separate blurb about it
 
