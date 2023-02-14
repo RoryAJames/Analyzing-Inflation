@@ -32,7 +32,7 @@ st.title('Analyzing Inflation, Earnings, and the S&P 500')
 st.write("""The S&P 500 is a weighted stock market index that tracks the performance of the five-hundred leading publicly traded companies in the United States.
          Undoubtedly, it is the most followed index and is regarded as the best gauge of the overall stock market. The value of the S&P 500 can be broken down
          into two components: 1) The earnings per share (EPS) value of the companies that make up the index. 2) The price to earnings multiple (P/E) that investors are willing
-         to pay for the EPS value. Simply put, the value of the S&P 500 can be calculated with the following formula:""")
+         to pay for EPS. Simply put, the value of the S&P 500 can be calculated with the following formula:""")
 
 st.latex(r'''\text{S\&P 500 Value} = \text{Earnings Per Share} * \text{Price to Earnings}''')
 
@@ -56,7 +56,7 @@ col2.metric("Monthly P/E", current_pe)
 col3.metric("Expected S&P 500 Value", round(current_pe * current_eps,2))
 col4.metric("Latest S&P 500 Close", latest_close)
 
-st.write("""As you can see, the expected S&P 500 value trades around the latest close value. There will be some slight deviations between these figures
+st.write("""As you can see, the expected S&P 500 value trades pretty closely to the latest close value. There will be some slight deviations between these figures
          since EPS and P/E are updated on a monthly basis, while the S&P 500 close is updated daily. So, if you want to know where the value of S&P 500
          will trade all you need to know is two things! 1) What are earnings going to be. 2) What is the P/E multiple going to be. The problem is... 
          no one knows what these are going to be. Banks, investment firms, hedge funds, and the like hire vast teams of analysts to come up with various models
@@ -79,9 +79,9 @@ st.write("""Inflation has arguably been the largest topic of economic concern in
          To see this relationship, I created a scatter plot with a regression model using data points from 1965 onward. Why did I choose 1965 as the starting year? This year was the beginning
          of what is regarded as [the period of great inflation](https://www.federalreservehistory.org/essays/great-inflation), where the US entered into a period of high
          inflation and economic hardship that lasted over a decade and a half. There has been a lot of commentary that the current period we are going through could resemble
-         that of the great inflation period, should the US Federal Reserve not take adequate measures to bring down the current inflation rate. As such, I felt this was a logical
+         that of the great inflation, should the US Federal Reserve not take adequate measures to bring down the current inflation rate. As such, I felt this was a logical
          place to start the data collection. After removing P/E outliers (values that exceeded the 95th percentile), it appears that the relationship between inflation and the
-         P/E multiple isn't perfectly linear. A two degree polynomial regression model ended up being the best approach for capturing this relationship: 
+         P/E multiple isn't quite perfectly linear. A two degree polynomial regression model ended up being the best approach for capturing this relationship: 
          """)
 
 ### GET INFLATION AND P/E DATA FROM NASDAQ USING QUANDL
@@ -167,12 +167,12 @@ exp_upper_estimate = round(exp_intervals['mean_ci_upper'][0],2)
 st.write(f"""Based on this scatter plot, there is a clear negative correlation between inflation and the P/E multiple. As inflation rises investors have lower market return expectations,
          thus the P/E value decreases. While the regression model is not perfect, it does a good job at predicting what the P/E multiple will be in periods of very high inflation. Overall,
          {round(model.rsquared*100,2)}% of the variance in the P/E multiple can be explained by the inflation rate. If we take the current US inflation rate of {round(current_inflation,2)}%,
-         and use it as the independent feature, the regression model provides us with a P/E point estimate of {point_estimate} 
+         and use it as the independent feature, the regression model provides us with a P/E point estimate of {point_estimate},  
          with a lower confidence interval of {lower_estimate}, and an upper confidence interval of {upper_estimate}. But this P/E prediction is way off from the current P/E value!
          That is because current inflation is a backwards looking data point, and markets are typically priced using forward looking points. In other words, investors pay for
          where they think asset prices will go in the future. If we apply the most current [1-Year expected inflation rate](https://fred.stlouisfed.org/series/EXPINF1YR)
          of {round(expected_inflation,2)}% to our regression model we get a P/E point estimate of {exp_point_estimate}, with a lower confidence interval of {exp_lower_estimate} and an upper confidence
-         interval of {exp_upper_estimate}.""")
+         interval of {exp_upper_estimate}. While this is still below, it is much closer to the current P/E.""")
 
 #DISPLAY THE RESULTS OF THE MODEL SUMMARY   
     
