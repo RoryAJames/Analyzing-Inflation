@@ -139,39 +139,38 @@ sm_poly_features = sm_poly.fit_transform(x.values.reshape(-1,1)) #Transform the 
 
 model = sm.OLS(y, sm_poly_features).fit()
 
-#Predict P/E based on current inflation rate
+# A function that provides model estimates for P/E based on an inflation rate that is provided
 
-poly_inputs = sm_poly.fit_transform(np.array(current_inflation).reshape(-1,1)) #Transform the current inflation rate to polynomial inputs
-prediction_intervals = model.get_prediction(poly_inputs) #Produces point estimate, upper, and lower prediction intervals of transformed polynomial inflation rate
-intervals = prediction_intervals.summary_frame(alpha=0.05) #Produces a pandas dataframe of intervals that you can select from
-
-#Create point estimate, upper, and lower bounds from the output of intervals summary frame
-
-point_estimate = round(intervals['mean'][0],2)
-lower_estimate = round(intervals['mean_ci_lower'][0],2)
-upper_estimate = round(intervals['mean_ci_upper'][0],2)
-
-#Predict P/E based on expected inflation rate
-
-exp_poly_inputs = sm_poly.fit_transform(np.array(expected_inflation).reshape(-1,1)) #Transform the current inflation rate to polynomial inputs
-exp_prediction_intervals = model.get_prediction(exp_poly_inputs) #Produces point estimate, upper, and lower prediction intervals of transformed polynomial inflation rate
-exp_intervals = exp_prediction_intervals.summary_frame(alpha=0.05) #Produces a pandas dataframe of intervals that you can select from
-
-#Create point estimate, upper, and lower bounds from the output of intervals summary frame
-
-exp_point_estimate = round(exp_intervals['mean'][0],2)
-exp_lower_estimate = round(exp_intervals['mean_ci_lower'][0],2)
-exp_upper_estimate = round(exp_intervals['mean_ci_upper'][0],2)
-
+def model_estimates(inflation_rate):
     
+    poly_inputs = sm_poly.fit_transform(np.array(inflation_rate).reshape(-1,1)) #Transform the provided inflation rate to polynomial inputs
+    prediction_intervals = model.get_prediction(poly_inputs) #Produces point estimate, upper, and lower prediction intervals of transformed polynomial inflation rate
+    intervals = prediction_intervals.summary_frame(alpha=0.05) #Produces a pandas dataframe of intervals that you can select from
+
+    #Create point estimate, upper, and lower bounds from the output of intervals summary frame
+
+    point_estimate = round(intervals['mean'][0],2)
+    lower_estimate = round(intervals['mean_ci_lower'][0],2)
+    upper_estimate = round(intervals['mean_ci_upper'][0],2)
+    
+    return point_estimate, lower_estimate, upper_estimate
+
+#Get model estimates for current inflation rate
+
+current_point_estimate, current_lower_estimate, current_upper_estimate = model_estimates(current_inflation)
+
+#Get model estimates for expected inflation rate
+
+exp_point_estimate, exp_lower_estimate, exp_upper_estimate = model_estimates(expected_inflation)
+
+  
 st.write(f"""Based on the scatter plot and regression line, there is a negative correlation between inflation and the P/E multiple. As inflation rises, investors have lower market return expectations,
          thus the P/E value decreases. While the regression model is not perfect, it does an exceptional job at predicting the P/E multiple during the excessively high inflationary periods.
-         If we take the current US inflation rate of {round(current_inflation,2)}% and apply it to the regression model, we get a P/E point estimate of {point_estimate}.
+         If we take the current US inflation rate of {round(current_inflation,2)}% and apply it to the regression model, we get a P/E point estimate of {current_point_estimate}.
          But this P/E prediction is way off from the current P/E value! That is because current inflation is a backwards looking data point,
-         and markets are typically priced using forward looking points. In other words, investors pay for where they think asset prices will go in the future.
-         If we apply the most current [1-Year expected inflation rate](https://fred.stlouisfed.org/series/EXPINF1YR) of {round(expected_inflation,2)}% to the regression model we
-         get a P/E point estimate of {exp_point_estimate}, with a lower confidence interval of {exp_lower_estimate} and an upper confidence
-         interval of {exp_upper_estimate}. While this is still below, it is much closer to the current P/E.""")
+         and markets are typically priced using forward looking data points. In other words, investors pay for where they think asset prices will go in the future.
+         If we apply the current [1-Year expected inflation rate](https://fred.stlouisfed.org/series/EXPINF1YR) of {round(expected_inflation,2)}% to the regression model we
+         get a P/E point estimate of {exp_point_estimate}. While this prediction is still below the current P/E value, it is much closer.""")
 
 #DISPLAY THE RESULTS OF THE MODEL SUMMARY   
     
