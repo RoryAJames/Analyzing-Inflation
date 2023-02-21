@@ -75,13 +75,13 @@ st.subheader('Part 1: Inflation And The P/E Multiple')
 
 st.write("""Inflation has arguably been the largest topic of economic concern in the past year. In March 2022 the US Federal Reserve started to aggressively take
          measures to cool the rate of inflation in the US by raising interest rates. The reason for looking at the relationship between
-         inflation and the P/E multiple is that historical data has shown there to be a [negative correlation between these variables](https://www.investopedia.com/ask/answers/123.asp#toc-review-of-the-pe-ratio).
+         inflation and the P/E multiple is that there is supposed to be a [negative correlation between these variables](https://www.investopedia.com/ask/answers/123.asp#toc-review-of-the-pe-ratio).
          To see this relationship, I created a scatter plot with a regression model using data points from 1965 onward. Why did I choose 1965 as the starting year? This year was the beginning
          of what is regarded as [the period of great inflation](https://www.federalreservehistory.org/essays/great-inflation), where the US entered into a period of high
          inflation and economic hardship that lasted over a decade and a half. There has been a lot of commentary that the current period we are going through could resemble
-         the great inflation era should the US Federal Reserve not take adequate measures to bring down the current inflation rate. As such, I felt this was a logical
-         place to start the data collection. After removing P/E outliers (values that exceeded the 95th percentile), it appears that the relationship between inflation and the
-         P/E multiple isn't quite perfectly linear. A two degree polynomial regression model ended up being the best approach for capturing this relationship: 
+         the great inflation era if the US Federal Reserve does not take adequate measures to bring down the current inflation rate. As such, I felt this was a logical
+         place to start the analysis. After removing P/E outliers (values that exceeded the 95th percentile), it appears that the relationship between inflation and the
+         P/E multiple isn't perfectly linear. A two degree polynomial regression model ended up being the best approach for capturing this relationship: 
          """)
 
 ### GET INFLATION AND P/E DATA FROM NASDAQ USING QUANDL
@@ -110,7 +110,7 @@ upper_limit = inflation_df['S&P500_PE'].quantile(0.95) #Establishes the cutoff f
 
 inflation_df = inflation_df[(inflation_df['S&P500_PE'] < upper_limit)] #Filters the data to values less than the cutoff
 
-### Plot the scatter plot using a two degree polynomial regression model
+### PLOT THE SCATTER PLOT USING A TWO DEGREE POLYNOMIAL REGRESSION MODEL
 
 fig = plt.figure(figsize=(14, 6))
 sns.regplot(x='Inflation', y='S&P500_PE', data=inflation_df, order = 2, line_kws={"color":"black"})
@@ -164,13 +164,13 @@ current_point_estimate, current_lower_estimate, current_upper_estimate = model_e
 exp_point_estimate, exp_lower_estimate, exp_upper_estimate = model_estimates(expected_inflation)
 
   
-st.write(f"""Based on the scatter plot and regression line, there is a negative correlation between inflation and the P/E multiple. As inflation rises, investors have lower market return expectations,
-         thus the P/E value decreases. While the regression model is not perfect, it does an exceptional job at predicting the P/E multiple during the excessively high inflationary periods.
+st.write(f"""Based on the scatter plot and regression line, there is in fact a negative correlation between inflation and the P/E multiple. As inflation rises, investors have lower market return expectations,
+         thus the P/E multiple decreases. While the regression model is not perfect, it does an exceptional job at predicting the P/E multiple during the excessively high inflationary periods.
          If we take the current US inflation rate of {round(current_inflation,2)}% and apply it to the regression model, we get a P/E point estimate of {current_point_estimate}.
-         But this P/E prediction is way off from the current P/E value! That is because current inflation is a backwards looking data point,
-         and markets are typically priced using forward looking data points. In other words, investors pay for where they think asset prices will go in the future.
-         If we apply the current [1-Year expected inflation rate](https://fred.stlouisfed.org/series/EXPINF1YR) of {round(expected_inflation,2)}% to the regression model we
-         get a P/E point estimate of {exp_point_estimate}. While this prediction is still below the current P/E value, it is much closer.""")
+         But this P/E prediction is way off from the current P/E multiple! That is because current inflation is a backwards looking data point,
+         and markets are typically priced using forward looking data points. In other words, investors pay for where they expect asset prices to go in the future. Fortunately, FRED
+         provides a [1-Year expected inflation rate dataset](https://fred.stlouisfed.org/series/EXPINF1YR). If we apply the expected inflation rate of {round(expected_inflation,2)}% to the regression model we get a P/E point estimate of {exp_point_estimate}. 
+         While this prediction is still below the current P/E multiple, it is a more realistic reflection of investor expectations.""")
 
 #DISPLAY THE RESULTS OF THE MODEL SUMMARY   
     
@@ -178,6 +178,11 @@ with st.expander("Click Here To See The Full Regression Model Summary"):
     st.write(model.summary())
 
 st.subheader('Part 2: Analyzing Historical Earnings')
+
+historical_earnings = qd.get("MULTPL/SP500_EARNINGS_MONTH", start_date = start_date, end_date = end_date).pct_change(periods=12)*100
+historical_earnings.dropna(inplace=True)
+
+st.dataframe(historical_earnings)
 
 st.subheader('Part 3: Putting It All Together')
 
