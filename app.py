@@ -125,7 +125,7 @@ st.pyplot(fig)
 
 # GET THE CURRENT AND EXPECTED INFLATION FIGURES
 
-expected_inflation = get_fred_data_latest('EXPINF1YR')
+expected_inflation = round(get_fred_data_latest('EXPINF1YR'),2)
 
 current_inflation = get_quandl_data_latest("RATEINF/INFLATION_USA")
 
@@ -169,7 +169,7 @@ st.write(f"""Based on the scatter plot and regression line, there is in fact a n
          If we take the current US inflation rate of {round(current_inflation,2)}% and apply it to the regression model, we get a P/E point estimate of {current_point_estimate}.
          But this P/E prediction is way off from the current P/E multiple! That is because current inflation is a backwards looking data point,
          and markets are typically priced using forward looking data points. In other words, investors pay for where they expect asset prices to go in the future. Fortunately, FRED
-         provides a [1-Year expected inflation rate dataset](https://fred.stlouisfed.org/series/EXPINF1YR). If we apply the expected inflation rate of {round(expected_inflation,2)}% to the regression model we get a P/E point estimate of {exp_point_estimate}. 
+         provides a [1-Year expected inflation rate dataset](https://fred.stlouisfed.org/series/EXPINF1YR). If we apply the expected inflation rate of {expected_inflation}% to the regression model we get a P/E point estimate of {exp_point_estimate}. 
          While this prediction is still below the current P/E multiple, it is a more realistic reflection of investor expectations.""")
 
 #DISPLAY THE RESULTS OF THE MODEL SUMMARY   
@@ -182,9 +182,49 @@ st.subheader('Part 2: Analyzing Historical Earnings')
 historical_earnings = qd.get("MULTPL/SP500_EARNINGS_MONTH", start_date = start_date, end_date = end_date).pct_change(periods=12)*100
 historical_earnings.dropna(inplace=True)
 
-st.dataframe(historical_earnings)
-
 st.subheader('Part 3: Putting It All Together')
+
+row1_col1, row1_col2 = st.columns([1,1])
+
+#List of options for inflation rate
+
+inflation_rates = [None,"1 Year Expected Inflation Rate", "Manual Input"]
+
+#User selection of inflation rate
+
+with row1_col1:
+
+    inflation_selection = st.selectbox("Where Do You Think Inflation Will Be In One Year",inflation_rates)
+
+    if inflation_selection:
+
+        if inflation_selection == "1 Year Expected Inflation Rate":
+            inflation_selection = expected_inflation
+            
+        if inflation_selection == "Manual Input":
+            inflation_input = st.number_input("Enter An Inflation Rate")
+            inflation_selection = inflation_input
+            
+        #Apply the user selection to the regression model
+
+        user_point_estimate, user_lower_estimate, user_upper_estimate = model_estimates(inflation_selection)
+    
+#List of options for EPS growth rate
+
+eps_growth_rate = [None,"Bad Year - 25th Percentile", "Average Year", "Good Year - 75th Percentile", "Manual Input"]
+
+#User selection of EPS growth rate
+
+with row1_col2:
+
+    eps_growth_rate_selection = st.selectbox("What Do You Think The One Year Earnings Growth Rate Will Be",eps_growth_rate)
+
+#Button that will display final calculations
+
+ok = st.button("Calculate S&P 500 Valuation")
+
+if ok:
+    st.write(f"An inflation rate of {inflation_selection}% produces a P/E point estimate of {user_point_estimate}.")
 
 st.sidebar.info(
         """
