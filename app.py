@@ -57,7 +57,7 @@ col3.metric("Expected S&P 500 Value", round(current_pe * current_eps,2))
 col4.metric("Latest S&P 500 Close", latest_close)
 
 st.write("""As you can see, the expected S&P 500 value is currently trading pretty close to the latest close value. There will be some slight deviations between these figures
-         since EPS and P/E are updated on a monthly basis, while the S&P 500 close is updated daily. So, if you want to know where the value of S&P 500
+         since EPS and P/E are updated on a quarterly and monthly basis, while the S&P 500 close is updated daily. So, if you want to know where the value of S&P 500
          will trade all you need to know is two things! 1) What are earnings going to be. 2) What is the P/E multiple going to be. The problem is... 
          no one knows what these are going to be. Banks, investment firms, hedge funds, and the like hire vast teams of analysts to come up with various models
          and predictions for these figures. The reality is, none of them are able to predict these perfectly. That being said, I still think it is an important 
@@ -78,7 +78,7 @@ st.write("""Inflation has arguably been the largest topic of economic concern in
          inflation and the P/E multiple is that there is supposed to be a [negative correlation between these variables](https://www.investopedia.com/ask/answers/123.asp#toc-review-of-the-pe-ratio).
          To see this relationship, I created a scatter plot with a regression model using data points from 1965 onward. Why did I choose 1965 as the starting year? This year was the beginning
          of what is regarded as [the period of great inflation](https://www.federalreservehistory.org/essays/great-inflation), where the US entered into a period of high
-         inflation and economic hardship that lasted over a decade and a half. There has been a lot of commentary that the current period we are going through could resemble
+         inflation and economic hardship that lasted for over a decade and a half. There has been a lot of commentary that the current period we are going through could resemble
          the great inflation era if the US Federal Reserve does not take adequate measures to bring down the current inflation rate. As such, I felt this was a logical
          place to start the analysis. After removing P/E outliers (values that exceeded the 95th percentile), it appears that the relationship between inflation and the
          P/E multiple isn't perfectly linear. A two degree polynomial regression model ended up being the best approach for capturing this relationship: 
@@ -104,7 +104,7 @@ inflation_df = pd.merge_asof(left=inflation_data, right=pe_data, right_index=Tru
 inflation_df = inflation_df.rename(columns={'Value_x':'Inflation',
                                             'Value_y':'S&P500_PE'}) #Rename the columns after performing the pandas merge as of
 
-### REMOVE OUTLIERS 
+### REMOVE P/E OUTLIERS 
 
 upper_limit = inflation_df['S&P500_PE'].quantile(0.95) #Establishes the cutoff for removing outliers
 
@@ -163,24 +163,37 @@ current_point_estimate, current_lower_estimate, current_upper_estimate = model_e
 
 exp_point_estimate, exp_lower_estimate, exp_upper_estimate = model_estimates(expected_inflation)
 
+#SUMMARY OF THE REGRESSION MODELS, PREDICTIONS AND CONFIDENCE INTERVALS
   
-st.write(f"""Based on the scatter plot and regression line, there is in fact a negative correlation between inflation and the P/E multiple. As inflation rises, investors have lower market return expectations,
-         thus the P/E multiple decreases. While the regression model is not perfect, it does an exceptional job at predicting the P/E multiple during the excessively high inflationary periods.
-         If we take the current US inflation rate of {round(current_inflation,2)}% and apply it to the regression model, we get a P/E point estimate of {current_point_estimate}.
-         But this P/E prediction is way off from the current P/E multiple! That is because current inflation is a backwards looking data point,
-         and markets are typically priced using forward looking data points. In other words, investors pay for where they expect asset prices to go in the future. Fortunately, FRED
-         provides a [1-Year expected inflation rate dataset](https://fred.stlouisfed.org/series/EXPINF1YR). If we apply the expected inflation rate of {expected_inflation}% to the regression model we get a P/E point estimate of {exp_point_estimate}. 
-         While this prediction is still below the current P/E multiple, it is a more realistic reflection of investor expectations.""")
+st.write(f"""Based on the scatter plot and regression line, there is in fact a negative correlation between inflation and the P/E multiple. As inflation rises,
+         investors have lower market return expectations, thus the P/E multiple decreases. While the regression model is not perfect, it does an exceptional job
+         at predicting the P/E multiple during the excessively high inflationary periods. If we take the current US inflation rate of {round(current_inflation,2)}%
+         and apply it to the regression model, we get a P/E point estimate of {current_point_estimate}. But this prediction is way off from the current P/E multiple!
+         That is because current inflation is a backwards looking data point, and markets are typically priced using forward looking predictions and expectations. 
+         Fortunately, FRED provides what the [1-Year expected inflation rate](https://fred.stlouisfed.org/series/EXPINF1YR) is. If we apply the expected inflation rate of
+         {expected_inflation}% to the regression model we get a P/E point estimate of {exp_point_estimate}, which is more in line with the current P/E multiple.""")
+
+st.write(f"""It is worth noting that regression models also provide a range of values, known as confidence intervals, that represent bounds that the true prediction value
+         is expected to fall between. This is typically done at a 95% confidence interval. In other words, we are 95% confident that the true value will fall between a lower and upper limit.
+         Rather than using a point estimate, we can use the confidence intervals to get a more complete picture of where the P/E multiple might be. In the case of the expected inflation
+         rate, we get a P/E multiple range between {exp_lower_estimate} and {exp_upper_estimate}.
+         """)
 
 #DISPLAY THE RESULTS OF THE MODEL SUMMARY   
     
 with st.expander("Click Here To See The Full Regression Model Summary"):
     st.write(model.summary())
+    
+## HISTORICAL EARNINGS
 
 st.subheader('Part 2: Analyzing Historical Earnings')
 
+st.write("""Rather than using analyst estimates to determine where earnings might end up, I decided to look at what the historical EPS growth has been since 1965.""")
+
 historical_earnings = qd.get("MULTPL/SP500_EARNINGS_MONTH", start_date = start_date, end_date = end_date).pct_change(periods=12)*100
 historical_earnings.dropna(inplace=True)
+
+## PUTTING IT ALL TOGETHER
 
 st.subheader('Part 3: Putting It All Together')
 
@@ -225,6 +238,8 @@ ok = st.button("Calculate S&P 500 Valuation")
 
 if ok:
     st.write(f"An inflation rate of {inflation_selection}% produces a P/E point estimate of {user_point_estimate}.")
+    
+## INFORMATION ON THE SIDE OF THE APP
 
 st.sidebar.info(
         """
