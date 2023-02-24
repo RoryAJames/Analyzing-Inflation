@@ -170,10 +170,10 @@ st.write(f"""Based on the scatter plot and regression line, there is in fact a n
          at predicting the P/E multiple during the excessively high inflationary periods. If we take the current US inflation rate of {round(current_inflation,2)}%
          and apply it to the regression model, we get a P/E point estimate of {current_point_estimate}. But this prediction is way off from the current P/E multiple!
          That is because current inflation is a backwards looking data point, and markets are typically priced using forward looking predictions and expectations. 
-         Fortunately, FRED provides what the [1-Year expected inflation rate](https://fred.stlouisfed.org/series/EXPINF1YR) is. If we apply the expected inflation rate of
-         {expected_inflation}% to the regression model we get a P/E point estimate of {exp_point_estimate}, which is more in line with the current P/E multiple.""")
+         Fortunately, FRED provides the [1-Year expected inflation rate](https://fred.stlouisfed.org/series/EXPINF1YR) which is currently at {expected_inflation}%.
+         If we apply this rate to the regression model we get a P/E point estimate of {exp_point_estimate}, which is more in line with the current P/E multiple.""")
 
-st.write(f"""It is worth noting that regression models also provide a range of values, known as confidence intervals, that represent bounds that the true prediction value
+st.write(f"""It is worth noting that regression models provide a range of values, known as confidence intervals, that represent what that the true prediction value
          is expected to fall between. This is typically done at a 95% confidence interval. In other words, we are 95% confident that the true value will fall between a lower and upper limit.
          Rather than using a point estimate, we can use the confidence intervals to get a more complete picture of where the P/E multiple might be. In the case of the expected inflation
          rate, we get a P/E multiple range between {exp_lower_estimate} and {exp_upper_estimate}.
@@ -188,10 +188,35 @@ with st.expander("Click Here To See The Full Regression Model Summary"):
 
 st.subheader('Part 2: Analyzing Historical Earnings')
 
-st.write("""Rather than using analyst estimates to determine where earnings might end up, I decided to look at what the historical EPS growth has been since 1965.""")
+#Get historical earnings data
 
 historical_earnings = qd.get("MULTPL/SP500_EARNINGS_MONTH", start_date = start_date, end_date = end_date).pct_change(periods=12)*100
-historical_earnings.dropna(inplace=True)
+historical_earnings.dropna(inplace=True) #Drop null values after calculating percent change
+historical_earnings = historical_earnings.rename(columns={'Value':'Historical_Earnings'})
+
+#Remove outliers in historical earnings using IQR method
+
+Q1 = historical_earnings['Historical_Earnings'].quantile(0.25)
+Q3 = historical_earnings['Historical_Earnings'].quantile(0.75)
+IQR = Q3 - Q1
+
+IQR_lower_limit = Q1 - 1.5*IQR
+IQR_upper_limit = Q3 + 1.5*IQR
+
+historical_earnings = historical_earnings[(historical_earnings['Historical_Earnings'] > IQR_lower_limit)&(historical_earnings['Historical_Earnings'] < IQR_upper_limit)]
+
+st.write("""Rather than using analyst estimates to determine where earnings might end up in a years time, I decided to look at what the historical EPS growth has been since 1965.
+         """)
+
+# Historical EPS growth rate box plot
+
+earnings_fig = plt.figure(figsize=(14, 6))
+sns.boxplot(y= 'Historical_Earnings', data=historical_earnings)
+sns.despine()
+plt.ylabel("EPS Growth Rate", fontsize= 14, labelpad =12)
+plt.title("Historical EPS Growth Rate", fontsize=16, pad= 12);
+
+st.pyplot(earnings_fig)
 
 ## PUTTING IT ALL TOGETHER
 
