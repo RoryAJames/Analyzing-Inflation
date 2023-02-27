@@ -58,7 +58,7 @@ col4.metric("Latest S&P 500 Close", latest_close)
 
 st.write("""As you can see, the expected S&P 500 value is currently trading pretty close to the latest close value. There will be some slight deviations between these figures
          since EPS and P/E are updated on a quarterly and monthly basis, while the S&P 500 close is updated daily. So, if you want to know where the value of S&P 500
-         will trade all you need to know is two things! 1) What are earnings going to be. 2) What is the P/E multiple going to be. The problem is... 
+         will trade at the end of a given year all you need to know is two things! 1) What are earnings going to be. 2) What is the P/E multiple going to be. The problem is... 
          no one knows what these are going to be. Banks, investment firms, hedge funds, and the like hire vast teams of analysts to come up with various models
          and predictions for these figures. The reality is, none of them are able to predict these perfectly. That being said, I still think it is an important 
          and informative exercise to analyze historical data, and use the analysis as a basis to come up with reasonable expectations of where the S&P 500 could trade.""")
@@ -66,7 +66,7 @@ st.write("""As you can see, the expected S&P 500 value is currently trading pret
 st.write("This project consists of three parts: ")
 
 st.markdown("- Part 1 - Exploring the relationship between inflation and the P/E multiple of the S&P 500.")
-st.markdown("- Part 2 - Analyzing the historical EPS growth of the S&P 500.")
+st.markdown("- Part 2 - Analyzing the historical EPS growth rate of the S&P 500.")
 st.markdown("- Part 3 - Putting it all together and allowing a user to see where the S&P 500 may trade based on their inputs.")
 
 st.write("""This project is for educational purposes only and should not be used for making investment decisions.""")
@@ -165,15 +165,15 @@ exp_point_estimate, exp_lower_estimate, exp_upper_estimate = model_estimates(exp
 
 #SUMMARY OF THE REGRESSION MODELS, PREDICTIONS AND CONFIDENCE INTERVALS
   
-st.write(f"""Based on the scatter plot and regression line, there is in fact a negative correlation between inflation and the P/E multiple. As inflation rises,
+st.write(f"""Based on the scatter plot and regression line, there is a negative correlation between inflation and the P/E multiple. As inflation rises,
          investors have lower market return expectations, thus the P/E multiple decreases. While the regression model is not perfect, it does an exceptional job
          at predicting the P/E multiple during the excessively high inflationary periods. If we take the current US inflation rate of {round(current_inflation,2)}%
          and apply it to the regression model, we get a P/E point estimate of {current_point_estimate}. But this prediction is way off from the current P/E multiple!
          That is because current inflation is a backwards looking data point, and markets are typically priced using forward looking predictions and expectations. 
-         Fortunately, FRED provides the [1-Year expected inflation rate](https://fred.stlouisfed.org/series/EXPINF1YR) which is currently at {expected_inflation}%.
-         If we apply this rate to the regression model we get a P/E point estimate of {exp_point_estimate}, which is more in line with the current P/E multiple.""")
+         Fortunately, FRED provides the [1-Year expected inflation rate](https://fred.stlouisfed.org/series/EXPINF1YR) which is currently sitting at {expected_inflation}%.
+         If we apply this rate to the regression model we get a P/E point estimate of {exp_point_estimate}.""")
 
-st.write(f"""It is worth noting that regression models provide a range of values, known as confidence intervals, that represent what that the true prediction value
+st.write(f"""It is worth noting that regression models also provide a range of values, known as confidence intervals, that represent what that the true prediction value
          is expected to fall between. This is typically done at a 95% confidence interval. In other words, we are 95% confident that the true value will fall between a lower and upper limit.
          Rather than using a point estimate, we can use the confidence intervals to get a more complete picture of where the P/E multiple might be. In the case of the expected inflation
          rate, we get a P/E multiple range between {exp_lower_estimate} and {exp_upper_estimate}.
@@ -205,16 +205,29 @@ IQR_upper_limit = Q3 + 1.5*IQR
 
 historical_earnings = historical_earnings[(historical_earnings['Historical_Earnings'] > IQR_lower_limit)&(historical_earnings['Historical_Earnings'] < IQR_upper_limit)]
 
-st.write("""Rather than using analyst estimates to determine where earnings might end up in a years time, I decided to look at what the historical EPS growth has been since 1965.
+#Create bad, median, and good years of EPS growth based on quantiles
+
+bad_year = round(historical_earnings['Historical_Earnings'].quantile(0.25),2)
+median_year = round(historical_earnings['Historical_Earnings'].median(),2)
+good_year = round(historical_earnings['Historical_Earnings'].quantile(0.75),2)
+
+st.write("""To estimate where earnings will be at the end of a given year, I analyzed the historical EPS growth rate of the S&P 500 from 1965 onwards.
+         Rather than trying to estimate a specific value for the EPS growth rate, I figured the best approach would be to determine a range of reasonable values.
+         After eliminating outliers (using the IQR method), I decided that the range of the EPS growth rate can fall into three options.  
+         
          """)
+
+st.markdown(f"- Bad Year (25th Percentile) - {bad_year}%")
+st.markdown(f"- Median Year - {median_year}%")
+st.markdown(f"- Good Year (75th Percentile) - {good_year}%")
 
 # Historical EPS growth rate box plot
 
 earnings_fig = plt.figure(figsize=(14, 6))
 sns.boxplot(y= 'Historical_Earnings', data=historical_earnings)
 sns.despine()
-plt.ylabel("EPS Growth Rate", fontsize= 14, labelpad =12)
-plt.title("Historical EPS Growth Rate", fontsize=16, pad= 12);
+plt.ylabel("EPS Growth Rate (%)", fontsize= 14, labelpad =12)
+plt.title("Historical EPS Growth Rate Of The S&P 500 Since 1965", fontsize=16, pad= 12);
 
 st.pyplot(earnings_fig)
 
@@ -239,7 +252,7 @@ with row1_col1:
         if inflation_selection == "1 Year Expected Inflation Rate":
             inflation_selection = expected_inflation
             
-        if inflation_selection == "Manual Input":
+        elif inflation_selection == "Manual Input":
             inflation_input = st.number_input("Enter An Inflation Rate")
             inflation_selection = inflation_input
             
@@ -255,7 +268,7 @@ eps_growth_rate = [None,"Bad Year - 25th Percentile", "Average Year", "Good Year
 
 with row1_col2:
 
-    eps_growth_rate_selection = st.selectbox("What Do You Think The One Year Earnings Growth Rate Will Be",eps_growth_rate)
+    eps_growth_rate_selection = st.selectbox("What Do You Think The One Year EPS Growth Rate Will Be",eps_growth_rate)
 
 #Button that will display final calculations
 
