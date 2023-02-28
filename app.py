@@ -9,18 +9,19 @@ import statsmodels.api as sm
 from sklearn.preprocessing import PolynomialFeatures
 import seaborn as sns
 import matplotlib.pyplot as plt
+from DataCleaning import OutlierRemover
 
 #A function that returns the most recent value of a symbol in Quandl
 def get_quandl_data_latest(symobl):
     latest_value =  qd.get(symobl, rows = 1) #Filters down to the last row in the data frame
     latest_value = latest_value.iloc[0].values[0] #Returns the value of the last row
-    return latest_value
+    return round(latest_value,2)
  
  #A function that returns the most recent value of a symbol in FRED
 def get_fred_data_latest(symbol):
     latest_value = pdr.DataReader([symbol], 'fred')
     latest_value = latest_value.iloc[:, 0][len(latest_value) - 1]
-    return latest_value
+    return round(latest_value,2)
 
 key = os.environ.get('Quandl_API_Key') #Retrieve Quandl key from environment variable
 qd.ApiConfig.api_key = key
@@ -125,7 +126,7 @@ st.pyplot(fig)
 
 # GET THE CURRENT AND EXPECTED INFLATION FIGURES
 
-expected_inflation = round(get_fred_data_latest('EXPINF1YR'),2)
+expected_inflation = get_fred_data_latest('EXPINF1YR')
 
 current_inflation = get_quandl_data_latest("RATEINF/INFLATION_USA")
 
@@ -196,14 +197,9 @@ historical_earnings = historical_earnings.rename(columns={'Value':'Historical_Ea
 
 #Remove outliers in historical earnings using IQR method
 
-Q1 = historical_earnings['Historical_Earnings'].quantile(0.25)
-Q3 = historical_earnings['Historical_Earnings'].quantile(0.75)
-IQR = Q3 - Q1
-
-IQR_lower_limit = Q1 - 1.5*IQR
-IQR_upper_limit = Q3 + 1.5*IQR
-
-historical_earnings = historical_earnings[(historical_earnings['Historical_Earnings'] > IQR_lower_limit)&(historical_earnings['Historical_Earnings'] < IQR_upper_limit)]
+outlier_remover = OutlierRemover(historical_earnings)
+outlier_remover.remove_outliers_iqr('Historical_Earnings')
+historical_earnings = outlier_remover.df
 
 #Create bad, median, and good years of EPS growth based on quantiles
 
