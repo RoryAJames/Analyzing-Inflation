@@ -26,7 +26,11 @@ def get_fred_data_latest(symbol):
 key = os.environ.get('Quandl_API_Key') #Retrieve Quandl key from environment variable
 qd.ApiConfig.api_key = key
 
+#Set app to a wide layout
+
 st.set_page_config(layout="wide")
+
+#App header
 
 st.title('Analyzing Inflation, Earnings, and the S&P 500')
 
@@ -81,7 +85,7 @@ st.write("""Inflation has arguably been the largest topic of economic concern in
          of what is regarded as [the period of great inflation](https://www.federalreservehistory.org/essays/great-inflation), where the US entered into a period of high
          inflation and economic hardship that lasted for over a decade and a half. There has been a lot of commentary that the current period we are going through could resemble
          the great inflation era if the US Federal Reserve does not take adequate measures to bring down the current inflation rate. As such, I felt this was a logical
-         place to start the analysis. After removing P/E outliers (values that exceeded the 95th percentile), it appears that the relationship between inflation and the
+         place to start the data collection and analysis. After removing P/E outliers (values that exceeded the 95th percentile), it appears that the relationship between inflation and the
          P/E multiple isn't perfectly linear. A two degree polynomial regression model ended up being the best approach for capturing this relationship: 
          """)
 
@@ -105,7 +109,7 @@ inflation_df = pd.merge_asof(left=inflation_data, right=pe_data, right_index=Tru
 inflation_df = inflation_df.rename(columns={'Value_x':'Inflation',
                                             'Value_y':'S&P500_PE'}) #Rename the columns after performing the pandas merge as of
 
-### REMOVE P/E OUTLIERS 
+### REMOVE P/E OUTLIERS - Values that exceed the 95th percentile
 
 upper_limit = inflation_df['S&P500_PE'].quantile(0.95) #Establishes the cutoff for removing outliers
 
@@ -187,11 +191,11 @@ with st.expander("Click Here To See The Full Regression Model Summary"):
     
 ## HISTORICAL EARNINGS
 
-st.subheader('Part 2: Analyzing Historical Earnings')
+st.subheader('Part 2: Analyzing Historical Earnings Growth')
 
 #Get historical earnings data
 
-historical_earnings = qd.get("MULTPL/SP500_EARNINGS_MONTH", start_date = start_date, end_date = end_date).pct_change(periods=12)*100
+historical_earnings = qd.get("MULTPL/SP500_EARNINGS_MONTH", start_date = start_date, end_date = end_date).pct_change(periods=12)*100 #Apply percent change with 12 periods to see annual
 historical_earnings.dropna(inplace=True) #Drop null values after calculating percent change
 historical_earnings = historical_earnings.rename(columns={'Value':'Historical_Earnings'})
 
@@ -199,7 +203,7 @@ historical_earnings = historical_earnings.rename(columns={'Value':'Historical_Ea
 
 outlier_remover = OutlierRemover(historical_earnings)
 outlier_remover.remove_outliers_iqr('Historical_Earnings')
-historical_earnings = outlier_remover.df
+historical_earnings = outlier_remover.df #Returns the historical earnings dataframe as df where the outliers have been removed
 
 #Create bad, median, and good years of EPS growth based on quantiles
 
@@ -207,14 +211,14 @@ bad_year = round(historical_earnings['Historical_Earnings'].quantile(0.25),2)
 median_year = round(historical_earnings['Historical_Earnings'].median(),2)
 good_year = round(historical_earnings['Historical_Earnings'].quantile(0.75),2)
 
-st.write("""To estimate where earnings will be at the end of a given year, I analyzed the historical EPS growth rate of the S&P 500 from 1965 onwards.
+st.write("""To determine where earnings will be at the end of a given year, I analyzed the historical EPS growth rate of the S&P 500 from 1965 onwards.
          Rather than trying to estimate a specific value for the EPS growth rate, I figured the best approach would be to determine a range of reasonable values.
-         After eliminating outliers (using the IQR method), I decided that the range of the EPS growth rate can fall into three options.  
-         
+         After removing outliers (using the IQR method), I decided that the EPS growth rate can fall into three options - good, bad, and typical years. For the sake of simplicity,
+         I assigned these years to the quartile cutoff points in the EPS growth rate. This produced the following EPS growth rate options:         
          """)
 
 st.markdown(f"- Bad Year (25th Percentile) - {bad_year}%")
-st.markdown(f"- Median Year - {median_year}%")
+st.markdown(f"- Typical Year (Median) - {median_year}%")
 st.markdown(f"- Good Year (75th Percentile) - {good_year}%")
 
 # Historical EPS growth rate box plot
@@ -230,6 +234,10 @@ st.pyplot(earnings_fig)
 ## PUTTING IT ALL TOGETHER
 
 st.subheader('Part 3: Putting It All Together')
+
+st.write("""Now that we have analyzed the relationship between inflation and the P/E multiple, along with the the historical growth rate of EPS, I want to put the two together
+         and let you see where the S&P 500 might trade based on your inflation and EPS growth rate inputs.
+         """)
 
 row1_col1, row1_col2 = st.columns([1,1])
 
@@ -258,7 +266,7 @@ with row1_col1:
     
 #List of options for EPS growth rate
 
-eps_growth_rate = [None,"Bad Year - 25th Percentile", "Average Year", "Good Year - 75th Percentile", "Manual Input"]
+eps_growth_rate = [None,"Bad Year - 25th Percentile", "Typical Year - Median", "Good Year - 75th Percentile", "Manual Input"]
 
 #User selection of EPS growth rate
 
