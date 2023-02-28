@@ -23,6 +23,16 @@ def get_fred_data_latest(symbol):
     latest_value = latest_value.iloc[:, 0][len(latest_value) - 1]
     return round(latest_value,2)
 
+# A function that calculates future value of earnings based on current earnings and a growth rate
+def eoy_estimate(current_value,growth_rate):
+    estimate = current_value * (1+round(growth_rate/100,2))
+    return round(estimate,2)
+
+#A function that calculates the percent difference between two numbers
+def percent_diff(current_value,future_value):
+    value = ((future_value-current_value)/current_value)*100
+    return round(value,2)
+
 key = os.environ.get('Quandl_API_Key') #Retrieve Quandl key from environment variable
 qd.ApiConfig.api_key = key
 
@@ -257,14 +267,14 @@ with row1_col1:
             inflation_selection = expected_inflation
             
         elif inflation_selection == "Manual Input":
-            inflation_input = st.number_input("Enter An Inflation Rate")
+            inflation_input = st.number_input("Enter An Inflation Rate (%)")
             inflation_selection = inflation_input
             
         #Apply the user selection to the regression model
 
         user_point_estimate, user_lower_estimate, user_upper_estimate = model_estimates(inflation_selection)
 
-##USER SELECTION FOR EPS
+##USER SELECTION FOR EPS GROWTH
     
 #List of options for EPS growth rate
 
@@ -273,14 +283,38 @@ eps_growth_rate = [None,"Bad Year - 25th Percentile", "Typical Year - Median", "
 with row1_col2:
 
     eps_growth_rate_selection = st.selectbox("What Do You Think The One Year EPS Growth Rate Will Be",eps_growth_rate)
+    
+    if eps_growth_rate_selection:
 
-#Button that will display final calculations
+        if eps_growth_rate_selection == "Bad Year - 25th Percentile":
+            eps_growth_rate_selection = bad_year
+            
+        elif eps_growth_rate_selection == "Typical Year - Median":
+            eps_growth_rate_selection = median_year
+        
+        elif eps_growth_rate_selection == "Good Year - 75th Percentile":
+            eps_growth_rate_selection = good_year
+            
+        elif eps_growth_rate_selection == "Manual Input":
+            eps_growth_rate_input = st.number_input("Enter An EPS Growth Rate (%)")
+            eps_growth_rate_selection = eps_growth_rate_input
+
+#Button that will display final calculations. If None is selected for inflation or EPS it results in an error and displays the prompt in the except
 
 ok = st.button("Calculate S&P 500 Valuation")
 
 try:
     if ok:
-        st.write(f"An inflation rate of {inflation_selection}% produces a P/E point estimate of {user_point_estimate}.")
+        
+        #FINAL CALCULATIONS BASED ON USER SELECTIONS
+        eps_estimate = eoy_estimate(current_eps, eps_growth_rate_selection)
+        final_value = round(user_point_estimate * eps_estimate,2)
+        percent_difference = percent_diff(latest_close, final_value)
+        
+        st.write(f"""An inflation rate of {inflation_selection}% produces a P/E point estimate of {user_point_estimate}. An EPS growth rate of {eps_growth_rate_selection}% brings the
+                 year end EPS value to {eps_estimate}. These estimates would result in the S&P 500 ending the year at {final_value}. This would represent a {percent_difference}% difference
+                 from the most recent S&P 500 close value.
+                 """)
     
 except:
         st.write("Please make a valid selection.")
