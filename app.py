@@ -245,7 +245,7 @@ row1_col1, row1_col2 = st.columns([1,1])
 
 inflation_rates = [None,"1 Year Expected Inflation Rate", "Manual Input"]
 
-#User selection of inflation rate
+##USER SELECTION FOR INFLATION RATE
 
 with row1_col1:
 
@@ -263,12 +263,12 @@ with row1_col1:
         #Apply the user selection to the regression model
 
         user_point_estimate, user_lower_estimate, user_upper_estimate = model_estimates(inflation_selection)
+
+##USER SELECTION FOR EPS
     
 #List of options for EPS growth rate
 
 eps_growth_rate = [None,"Bad Year - 25th Percentile", "Typical Year - Median", "Good Year - 75th Percentile", "Manual Input"]
-
-#User selection of EPS growth rate
 
 with row1_col2:
 
@@ -278,8 +278,12 @@ with row1_col2:
 
 ok = st.button("Calculate S&P 500 Valuation")
 
-if ok:
-    st.write(f"An inflation rate of {inflation_selection}% produces a P/E point estimate of {user_point_estimate}.")
+try:
+    if ok:
+        st.write(f"An inflation rate of {inflation_selection}% produces a P/E point estimate of {user_point_estimate}.")
+    
+except:
+        st.write("Please make a valid selection.")
     
 ## INFORMATION ON THE SIDE OF THE APP
 
