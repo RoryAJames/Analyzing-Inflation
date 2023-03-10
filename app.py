@@ -71,7 +71,7 @@ col2.metric("P/E", current_pe)
 col3.metric("Expected S&P 500 Value", round(current_pe * current_eps,2))
 col4.metric("Latest S&P 500 Close", latest_close)
 
-st.write("""As you can see, the expected S&P 500 value is currently trading pretty close to the latest close value. There will be some slight deviations between these figures
+st.write("""As you can see, the latest S&P 500 close value is currently trading pretty close to the expected value. There will be some slight deviations between these figures
          since EPS and P/E are updated on a quarterly and monthly basis, while the S&P 500 close is updated daily. So, if you want to know where the value of S&P 500
          will trade at the end of a given year all you need to know is two things! 1) What are earnings going to be. 2) What is the P/E multiple going to be. The problem is... 
          no one knows what these are going to be. Banks, investment firms, hedge funds, and the like hire vast teams of analysts to come up with various models
@@ -90,7 +90,7 @@ st.subheader('Part 1: Inflation And The P/E Multiple')
 
 st.write("""Inflation has arguably been the largest topic of economic concern in the past year. In March 2022 the US Federal Reserve started to aggressively take
          measures to cool the rate of inflation in the US by raising interest rates. The reason for looking at the relationship between
-         inflation and the P/E multiple is that there is supposed to be a [negative correlation between these variables](https://www.investopedia.com/ask/answers/123.asp#toc-review-of-the-pe-ratio).
+         inflation and the P/E multiple is that there is supposed to be a [negative correlation between these data points](https://www.investopedia.com/ask/answers/123.asp#toc-review-of-the-pe-ratio).
          To see this relationship, I created a scatter plot with a regression model using data points from 1965 onward. Why did I choose 1965 as the starting year? This year was the beginning
          of what is regarded as [the period of great inflation](https://www.federalreservehistory.org/essays/great-inflation), where the US entered into a period of high
          inflation and economic hardship that lasted for over a decade and a half. There has been a lot of commentary that the current period we are going through could resemble
@@ -131,7 +131,7 @@ fig = plt.figure(figsize=(14, 6))
 sns.regplot(x='Inflation', y='S&P500_PE', data=inflation_df, order = 2, line_kws={"color":"black"})
 sns.set(style="ticks")
 sns.despine()
-plt.xlabel("Inflation Rate", fontsize= 14, labelpad =12)
+plt.xlabel("Inflation Rate (%)", fontsize= 14, labelpad =12)
 plt.ylabel("P/E Multiple", fontsize= 14, labelpad =12)
 plt.title("Relationship Between Inflation and The P/E Multiple Of The S&P 500", fontsize=16, pad= 12)
 plt.grid();
@@ -188,7 +188,7 @@ st.write(f"""Based on the scatter plot and regression line, there is a negative 
          Fortunately, FRED provides the [1-Year expected inflation rate](https://fred.stlouisfed.org/series/EXPINF1YR) which is currently sitting at {expected_inflation}%.
          If we apply this rate to the regression model we get a P/E point estimate of {exp_point_estimate}.""")
 
-st.write(f"""It is worth noting that regression models also provide a range of values, known as confidence intervals, that represent what that the true prediction value
+st.write(f"""It is worth noting that regression models also provide a range of values, known as confidence intervals, that represent where the true prediction value
          is expected to fall between. This is typically done at a 95% confidence interval. In other words, we are 95% confident that the true value will fall between a lower and upper limit.
          Rather than using a point estimate, we can use the confidence intervals to get a more complete picture of where the P/E multiple might be. In the case of the expected inflation
          rate, we get a P/E multiple range between {exp_lower_estimate} and {exp_upper_estimate}.
@@ -223,7 +223,7 @@ good_year = round(historical_earnings['Historical_Earnings'].quantile(0.75),2)
 
 st.write("""To determine where earnings will be at the end of a given year, I analyzed the historical EPS growth rate of the S&P 500 from 1965 onwards.
          Rather than trying to estimate a specific value for the EPS growth rate, I figured the best approach would be to determine a range of reasonable values.
-         After removing outliers (using the IQR method), I decided that the EPS growth rate can fall into three options - good, bad, and typical years. For the sake of simplicity,
+         After removing outliers (using the IQR method), I decided that the EPS growth rate can fall into three options - bad, typical, and good years. For the sake of simplicity,
          I assigned these years to the quartile cutoff points in the EPS growth rate. This produced the following EPS growth rate options:         
          """)
 
@@ -245,7 +245,7 @@ st.pyplot(earnings_fig)
 
 st.subheader('Part 3: Putting It All Together')
 
-st.write("""Now that we have analyzed the relationship between inflation and the P/E multiple, along with the the historical growth rate of EPS, I want to put the two together
+st.write("""Now that we have analyzed the relationship between inflation and the P/E multiple, along with the the historical EPS growth rate options, I want to put the two together
          and let you see where the S&P 500 might trade based on your inflation and EPS growth rate inputs.
          """)
 
@@ -311,10 +311,15 @@ try:
         final_value = round(user_point_estimate * eps_estimate,2)
         percent_difference = percent_diff(latest_close, final_value)
         
-        st.write(f"""An inflation rate of {inflation_selection}% produces a P/E point estimate of {user_point_estimate}. An EPS growth rate of {eps_growth_rate_selection}% brings the
-                 year end EPS value to {eps_estimate}. These estimates would result in the S&P 500 ending the year at {final_value}. This would represent a {percent_difference}% difference
-                 from the most recent S&P 500 close value.
-                 """)
+        st.write("Here is a breakdown based on your inputs: ")
+        
+        st.markdown(f""" - An inflation rate of {inflation_selection}% produces a P/E point estimate of {user_point_estimate}, with a lower confidence interval of {user_lower_estimate},
+                    and an upper confidence interval of {user_upper_estimate}.""")
+        
+        st.markdown(f""" - An EPS growth rate of {eps_growth_rate_selection}% would bring the year end EPS value to {eps_estimate}.""")
+                    
+        st.markdown(f""" - These figures would result in the S&P 500 ending the year at {final_value}. Should these come to fruition, this would represent a {percent_difference}% difference
+                 from the most recent S&P 500 close value.""")
     
 except:
         st.write("Please make a valid selection.")
