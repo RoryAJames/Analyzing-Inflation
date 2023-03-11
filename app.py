@@ -332,7 +332,7 @@ try:
         
         st.markdown(f""" - An EPS growth rate of {eps_growth_rate_selection}% would bring the year end EPS value to {eps_estimate}.""")
                     
-        st.markdown(f""" - These figures would result in the S&P 500 ending the year at {final_value}. This would represent a {percent_difference}% difference
+        st.markdown(f""" - These figures would result in the S&P 500 ending the year at {final_value}. This would result in a {percent_difference}% difference
                  from the most recent S&P 500 close value.""")
     
 except:
