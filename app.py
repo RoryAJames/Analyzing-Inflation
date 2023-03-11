@@ -188,10 +188,24 @@ st.write(f"""Based on the scatter plot and regression line, there is a negative 
          Fortunately, FRED provides the [1-Year expected inflation rate](https://fred.stlouisfed.org/series/EXPINF1YR) which is currently sitting at {expected_inflation}%.
          If we apply this rate to the regression model we get a P/E point estimate of {exp_point_estimate}.""")
 
+#A SUMMARY STATEMENT BASED ON THE CURRENT P/E MULTIPLE AND WHETHER IT IS WITHIN THE CONFIDENCE INTERVAL RANGE
+statment = " "
+
+if current_pe > exp_upper_estimate:
+    statment = """At this moment the current P/E multiple is greater than the upper confidence interval. While it is not a certainty, this does suggest that the current P/E multiple
+    may decrease in the near future and could revert to the expected range of values."""
+    
+elif exp_lower_estimate <= current_pe <= exp_upper_estimate:
+    statment = """At this moment the current P/E multiple is within the confidence interval range."""
+
+elif  current_pe < exp_lower_estimate:
+    statment = """At this moment the current P/E multiple is less than the lower confidence interval. While it is not a certainty, this does suggest that the current P/E multiple
+    may increase in the near future and could revert to the expected range of values."""
+
 st.write(f"""It is worth noting that regression models also provide a range of values, known as confidence intervals, that represent where the true prediction value
          is expected to fall between. This is typically done at a 95% confidence interval. In other words, we are 95% confident that the true value will fall between a lower and upper limit.
          Rather than using a point estimate, we can use the confidence intervals to get a more complete picture of where the P/E multiple might be. In the case of the expected inflation
-         rate, we get a P/E multiple range between {exp_lower_estimate} and {exp_upper_estimate}.
+         rate, we get a P/E multiple range between {exp_lower_estimate} and {exp_upper_estimate}. {statment}
          """)
 
 #DISPLAY THE RESULTS OF THE MODEL SUMMARY   
@@ -318,7 +332,7 @@ try:
         
         st.markdown(f""" - An EPS growth rate of {eps_growth_rate_selection}% would bring the year end EPS value to {eps_estimate}.""")
                     
-        st.markdown(f""" - These figures would result in the S&P 500 ending the year at {final_value}. Should these come to fruition, this would represent a {percent_difference}% difference
+        st.markdown(f""" - These figures would result in the S&P 500 ending the year at {final_value}. This would represent a {percent_difference}% difference
                  from the most recent S&P 500 close value.""")
     
 except:
