@@ -44,9 +44,9 @@ st.set_page_config(layout="wide")
 
 st.title('Analyzing Inflation, Earnings, and the S&P 500')
 
-st.write("""The S&P 500 is a weighted stock market index that tracks the performance of the five-hundred leading publicly traded companies in the United States.
+st.write("""The S&P 500 is a weighted stock market index that tracks the performance of the leading five-hundred publicly traded companies in the United States.
          Undoubtedly, it is the most followed index and is regarded as the best gauge of the overall stock market. The value of the S&P 500 can be broken down
-         into two components: 1) The earnings per share (EPS) value of the companies that make up the index. 2) The price to earnings multiple (P/E) that investors are willing
+         into two components: 1) The earnings per share (EPS) value of the companies that make up the index, 2) The price to earnings multiple (P/E) that investors are willing
          to pay for EPS. Simply put, the value of the S&P 500 can be calculated with the following formula:""")
 
 st.latex(r'''\text{S\&P 500 Value} = \text{Earnings Per Share} * \text{Price to Earnings}''')
@@ -72,10 +72,10 @@ col3.metric("Expected S&P 500 Value", round(current_pe * current_eps,2))
 col4.metric("Latest S&P 500 Close", latest_close)
 
 st.write("""As you can see, the latest S&P 500 close value is currently trading pretty close to the expected value. There will be some slight deviations between these figures
-         since EPS and P/E are updated on a quarterly and monthly basis, while the S&P 500 close is updated daily. So, if you want to know where the value of S&P 500
-         will trade at the end of a given year all you need to know is two things! 1) What are earnings going to be. 2) What is the P/E multiple going to be. The problem is... 
+         since EPS and P/E are updated on a quarterly and monthly basis respectively, while the S&P 500 close is updated daily. So, if you want to know where the value of S&P 500
+         will trade at the end of a given year all you need to know is two things! What are earnings and the P/E multiple going to be? The problem is... 
          no one knows what these are going to be. Banks, investment firms, hedge funds, and the like hire vast teams of analysts to come up with various models
-         and predictions for these figures. The reality is, none of them are able to predict these perfectly. That being said, I still think it is an important 
+         and predictions for these figures. The reality is, none of them are able to predict them perfectly. That being said, I still think it is an important 
          and informative exercise to analyze historical data, and use the analysis as a basis to come up with reasonable expectations of where the S&P 500 could trade.""")
 
 st.write("This project consists of three parts: ")
@@ -88,7 +88,7 @@ st.write("""This project is for educational purposes only and should not be used
 
 st.subheader('Part 1: Inflation And The P/E Multiple')
 
-st.write("""Inflation has arguably been the largest topic of economic concern in the past year. In March 2022 the US Federal Reserve started to aggressively take
+st.write("""Inflation has arguably been the largest topic of economic concern in the past year. In March 2022, the US Federal Reserve started to aggressively take
          measures to cool the rate of inflation in the US by raising interest rates. The reason for looking at the relationship between
          inflation and the P/E multiple is that there is supposed to be a [negative correlation between these data points](https://www.investopedia.com/ask/answers/123.asp#toc-review-of-the-pe-ratio).
          To see this relationship, I created a scatter plot with a regression model using data points from 1965 onward. Why did I choose 1965 as the starting year? This year was the beginning
@@ -184,22 +184,22 @@ st.write(f"""Based on the scatter plot and regression line, there is a negative 
          investors have lower market return expectations, thus the P/E multiple decreases. While the regression model is not perfect, it does an exceptional job
          at predicting the P/E multiple during the excessively high inflationary periods. If we take the current US inflation rate of {round(current_inflation,2)}%
          and apply it to the regression model, we get a P/E point estimate of {current_point_estimate}. But this prediction is way off from the current P/E multiple!
-         That is because current inflation is a backwards looking data point, and markets are typically priced using forward looking predictions and expectations. 
-         Fortunately, FRED provides the [1-Year expected inflation rate](https://fred.stlouisfed.org/series/EXPINF1YR) which is currently sitting at {expected_inflation}%.
+         This could be attributed to current inflation being a backwards looking data point as markets are typically priced using forward looking predictions and expectations. 
+         Fortunately, FRED provides a [1-Year expected inflation rate](https://fred.stlouisfed.org/series/EXPINF1YR) which is currently sitting at {expected_inflation}%.
          If we apply this rate to the regression model we get a P/E point estimate of {exp_point_estimate}.""")
 
 #A SUMMARY STATEMENT BASED ON THE CURRENT P/E MULTIPLE AND WHETHER IT IS WITHIN THE CONFIDENCE INTERVAL RANGE
 statment = " "
 
 if current_pe > exp_upper_estimate:
-    statment = """At this moment the current P/E multiple is greater than the upper confidence interval. While it is not a certainty, this does suggest that the current P/E multiple
+    statment = """At this moment, the current P/E multiple is greater than the upper confidence interval. While it is not a certainty, this does suggest that the current P/E multiple
     may decrease in the near future and could revert to the expected range of values."""
     
 elif exp_lower_estimate <= current_pe <= exp_upper_estimate:
-    statment = """At this moment the current P/E multiple is within the confidence interval range."""
+    statment = """At this moment, the current P/E multiple is within the confidence interval range."""
 
 elif  current_pe < exp_lower_estimate:
-    statment = """At this moment the current P/E multiple is less than the lower confidence interval. While it is not a certainty, this does suggest that the current P/E multiple
+    statment = """At this moment, the current P/E multiple is less than the lower confidence interval. While it is not a certainty, this does suggest that the current P/E multiple
     may increase in the near future and could revert to the expected range of values."""
 
 st.write(f"""It is worth noting that regression models also provide a range of values, known as confidence intervals, that represent where the true prediction value
@@ -332,7 +332,7 @@ try:
         
         st.markdown(f""" - An EPS growth rate of {eps_growth_rate_selection}% would bring the year end EPS value to {eps_estimate}.""")
                     
-        st.markdown(f""" - These figures would result in the S&P 500 ending the year at {final_value}. This would result in a {percent_difference}% difference
+        st.markdown(f""" - These figures would result in the S&P 500 ending the year at {final_value}. This would produce a {percent_difference}% difference
                  from the most recent S&P 500 close value.""")
     
 except:
@@ -351,5 +351,4 @@ st.sidebar.info(
         Feel free to connect with me:        
         [GitHub](https://github.com/RoryAJames) | [LinkedIn](https://www.linkedin.com/in/rory-james-873493111/)
         
-    """
-    )
+    """)
