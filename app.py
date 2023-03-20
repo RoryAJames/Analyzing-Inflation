@@ -55,11 +55,16 @@ st.write('')
 
 #Get latest data points from Quandl and FRED
 
-current_eps =  get_quandl_data_latest("MULTPL/SP500_EARNINGS_MONTH")
+try:
 
-current_pe = get_quandl_data_latest("MULTPL/SP500_PE_RATIO_MONTH")
+    current_eps =  get_quandl_data_latest("MULTPL/SP500_EARNINGS_MONTH")
 
-latest_close = get_fred_data_latest('sp500')
+    current_pe = get_quandl_data_latest("MULTPL/SP500_PE_RATIO_MONTH")
+
+    latest_close = get_fred_data_latest('sp500')
+    
+except:
+    st.write("We are sorry, but we've exceeded the maximum number of API calls allowed within a specific timeframe due to higher than normal traffic. Please check back later.")
 
 #Display the latest data points as Streamlit metrics
 
