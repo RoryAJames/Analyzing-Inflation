@@ -341,7 +341,7 @@ try:
             st.write("Please make a valid selection.")
 
 except:
-    st.write("Apologies, I am experiencing higher than normal traffic volumes. Please check back later.")
+    st.write("Apologies, I am experiencing a higher than normal rate of visits at this moment. Please check back later.")
     
 ## INFORMATION ON THE SIDE OF THE APP
 
