@@ -45,6 +45,14 @@ st.set_page_config(layout="wide")
 st.title('Analyzing Inflation, Earnings, and the S&P 500')
 
 try:
+    
+    #Get latest data points from Quandl and FRED
+
+    current_eps =  get_quandl_data_latest("MULTPL/SP500_EARNINGS_MONTH")
+
+    current_pe = get_quandl_data_latest("MULTPL/SP500_PE_RATIO_MONTH")
+
+    latest_close = get_fred_data_latest('sp500')
 
     st.write("""The S&P 500 is a weighted stock market index that tracks the performance of the leading five-hundred publicly traded companies in the United States.
             Undoubtedly, it is the most followed index and is regarded as the best gauge of the overall stock market. The value of the S&P 500 can be broken down
@@ -54,14 +62,6 @@ try:
     st.latex(r'''\text{S\&P 500 Value} = \text{Earnings Per Share} * \text{Price to Earnings}''')
 
     st.write('')
-
-    #Get latest data points from Quandl and FRED
-
-    current_eps =  get_quandl_data_latest("MULTPL/SP500_EARNINGS_MONTH")
-
-    current_pe = get_quandl_data_latest("MULTPL/SP500_PE_RATIO_MONTH")
-
-    latest_close = get_fred_data_latest('sp500')
     
     #Display the latest data points as Streamlit metrics
 
